@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SoDetect — Mise en service</title>
+<meta name="description" content="Connectez votre capteur SoDetect en 2 minutes.">
+<style>
+  :root{
+    --ink:#0a0b0d; --panel:#14161a; --line:#24262b;
+    --white:#f4f4f2; --gray:#8b8d90; --dim:#5b5d60;
+    --green:#2ecc71; --green-soft:rgba(46,204,113,.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--ink);color:var(--white);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .mono{font-family:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",monospace;}
+  .wrap{max-width:480px;margin:0 auto;padding:0 22px 90px;}
+
+  /* ---------- Ring motif (signature) ---------- */
+  .stage{padding:56px 0 28px;text-align:center;}
+  .ring-wrap{position:relative;width:132px;height:132px;margin:0 auto 22px;}
+  .ring{position:absolute;inset:0;border-radius:50%;}
+  .ring.outer{border:1.6px dashed var(--dim);animation:spin 26s linear infinite;}
+  .ring.inner{inset:20px;border:1.6px solid var(--dim);}
+  .dot{position:absolute;inset:0;margin:auto;width:9px;height:9px;top:0;bottom:0;left:0;right:0;
+    border-radius:50%;background:var(--dim);transition:background .4s;}
+  .ring-wrap.live .ring.outer{border-color:var(--green);border-style:solid;animation:spin 3.2s linear infinite;}
+  .ring-wrap.live .ring.inner{border-color:var(--green);box-shadow:0 0 22px var(--green-soft);}
+  .ring-wrap.live .dot{background:var(--green);}
+  .ring-wrap.done .ring.outer,.ring-wrap.done .ring.inner{border-color:var(--green);border-style:solid;animation:none;}
+  .ring-wrap.done .dot{background:var(--green);}
+  .check{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .3s;}
+  .ring-wrap.done .check{opacity:1;}
+  .ring-wrap.done .dot{opacity:0;}
+  .check svg{width:34px;height:34px;stroke:var(--green);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .brand{font-size:22px;font-weight:700;letter-spacing:2px;margin:0;}
+  .tag{color:var(--gray);font-size:14.5px;margin:8px 0 0;}
+  .eyebrow{font-size:11px;letter-spacing:1.5px;color:var(--green);text-transform:uppercase;
+    display:block;margin-bottom:6px;}
+
+  /* ---------- Steps ---------- */
+  .step{border-top:1px solid var(--line);padding:26px 0;scroll-margin-top:40vh;}
+  .step:first-of-type{border-top:1px solid var(--line);}
+  .step-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;}
+  .step-num{font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;font-size:13px;
+    color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:2px 7px;
+    transition:color .3s,border-color .3s;}
+  .step.active .step-num{color:var(--green);border-color:var(--green);}
+  .step h2{font-size:17.5px;margin:0;font-weight:600;}
+  .step p{color:var(--gray);font-size:14.5px;line-height:1.55;margin:0 0 10px;}
+  .chip{display:inline-block;background:var(--panel);border:1px solid var(--line);
+    border-radius:6px;padding:3px 9px;font-size:13px;color:var(--white);margin-top:4px;}
+  .beep{color:var(--green);}
+
+  /* ---------- Outcome ---------- */
+  .outcome{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px 20px;margin-top:30px;text-align:center;}
+  .outcome h3{margin:0 0 6px;font-size:16px;}
+  .outcome p{color:var(--gray);font-size:14px;margin:0 0 16px;line-height:1.5;}
+  .btn{display:inline-block;background:var(--green);color:#0a0b0d;font-weight:700;
+    font-size:14.5px;padding:12px 22px;border-radius:9px;text-decoration:none;}
+
+  /* ---------- Troubleshoot ---------- */
+  details{border-top:1px solid var(--line);padding:16px 0;}
+  details:last-of-type{border-bottom:1px solid var(--line);}
+  summary{font-size:14.5px;cursor:pointer;list-style:none;display:flex;
+    justify-content:space-between;align-items:center;}
+  summary::-webkit-details-marker{display:none;}
+  summary::after{content:"+";color:var(--gray);font-size:18px;}
+  details[open] summary::after{content:"–";}
+  details p{color:var(--gray);font-size:13.5px;line-height:1.55;margin:10px 0 0;}
+  .help-title{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--dim);margin:44px 0 4px;}
+
+  footer{margin-top:50px;text-align:center;color:var(--dim);font-size:12.5px;line-height:1.7;}
+  footer a{color:var(--gray);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="stage">
+    <div class="ring-wrap" id="ring">
+      <div class="ring outer"></div>
+      <div class="ring inner"></div>
+      <div class="dot"></div>
+      <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 13 9 18 20 6"/></svg></div>
+    </div>
+    <p class="brand">SODETECT</p>
+    <p class="tag">Connecte ton capteur en deux minutes.<br>Aucune app à installer.</p>
+  </div>
+
+  <div class="step" data-step>
+    <div class="step-head"><span class="step-num mono">01</span><h2>Allume le capteur</h2></div>
+    <p>Sur batterie : il est déjà actif. Sur secteur : branche le câble USB.
+       Un <span class="beep">bip court</span> confirme le démarrage.</p>
+  </div>
+
+  <div class="step" data-step>
+    <div class="step-head"><span class="step-num mono">02</span><h2>Trouve le réseau du capteur</h2></div>
+    <p>Sur ton téléphone : Réglages → Wi-Fi. Cherche un réseau qui commence par</p>
+    <span class="chip mono">SoDetect-XXXXXX</span>
+    <p style="margin-top:10px">Connecte-toi — pas de mot de passe requis à cette étape.</p>
+  </div>
+
+  <div class="step" data-step>
+    <div class="step-head"><span class="step-num mono">03</span><h2>Choisis ton Wi-Fi</h2></div>
+    <p>Une page s'ouvre automatiquement. Sélectionne le Wi-Fi du bâtiment,
+       entre son mot de passe, valide. Le capteur redémarre seul.</p>
+  </div>
+
+  <div class="outcome" id="outcome">
+    <h3>C'est en ligne</h3>
+    <p>Le capteur apparaît maintenant dans ton tableau de bord.<br>
+       Assigne-le à ton établissement pour activer le suivi.</p>
+    <a class="btn" href="https://sodetect.ch/dashboard">Ouvrir le tableau de bord</a>
+  </div>
+
+  <p class="help-title">Ça bloque ?</p>
+
+  <details>
+    <summary>Le réseau SoDetect-XXXXXX n'apparaît pas</summary>
+    <p>Attends 30 secondes après l'allumage. Si rien n'apparaît, maintiens le bouton
+       du capteur 5 secondes pour relancer la configuration.</p>
+  </details>
+  <details>
+    <summary>La page de configuration ne s'ouvre pas seule</summary>
+    <p>Ouvre un navigateur et va sur <span class="mono">192.168.4.1</span> une fois
+       connecté au réseau SoDetect-XXXXXX.</p>
+  </details>
+  <details>
+    <summary>Le capteur n'apparaît pas dans le tableau de bord</summary>
+    <p>Vérifie le Wi-Fi choisi à l'étape 3 — il doit avoir accès à internet.
+       Rapproche le capteur du routeur pour le premier test.</p>
+  </details>
+
+  <footer>
+    Besoin d'aide ? <a href="mailto:support@sodetect.ch">support@sodetect.ch</a><br>
+    SoDetect — Soclic Group Sàrl, Genève
+  </footer>
+</div>
+
+<script>
+  var steps = document.querySelectorAll('[data-step]');
+  var ring = document.getElementById('ring');
+  var outcome = document.getElementById('outcome');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      e.target.classList.toggle('active', e.isIntersecting);
+    });
+  }, {rootMargin:'-35% 0px -50% 0px'});
+  steps.forEach(function(s){ io.observe(s); });
+
+  var live = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting) ring.classList.add('live'); });
+  }, {rootMargin:'-10% 0px -70% 0px'});
+  live.observe(steps[0]);
+
+  var done = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ ring.classList.remove('live'); ring.classList.add('done'); }
+      else { ring.classList.remove('done'); if(steps.length) ring.classList.add('live'); }
+    });
+  }, {rootMargin:'0px 0px -60% 0px'});
+  done.observe(outcome);
+</script>
+</body>
+</html>
